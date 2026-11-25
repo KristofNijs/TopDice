@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'ad_banner.dart';
 import 'casino_theme.dart';
 import 'dice/dice_engine.dart';
 import 'dice/dice_pips.dart';
@@ -109,6 +110,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(title: const Text('TopDice')),
+      bottomNavigationBar: const AdBanner(),
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
@@ -208,6 +210,7 @@ class _ResultScreenState extends State<ResultScreen> {
     final faceSize = (screenWidth / 6).clamp(48.0, 96.0);
     return Scaffold(
       appBar: AppBar(title: Text('${widget.count}d${widget.sides}')),
+      bottomNavigationBar: const AdBanner(),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
