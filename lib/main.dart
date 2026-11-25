@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'casino_theme.dart';
 import 'dice/dice_engine.dart';
@@ -11,6 +12,9 @@ typedef RandomFactory = Random Function();
 
 /// Mogelijke aantal ogen per dobbelsteen (klassiek dobbelsteen-palet).
 const kSupportedSides = [4, 6, 8, 10, 12, 20];
+
+/// Sleutel waaronder de gekozen soort dobbelsteen bewaard wordt tussen sessies.
+const String kDiceSidesPrefKey = 'dice.sides';
 
 Random _defaultRandomFactory() => Random();
 
@@ -44,6 +48,43 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   int _sides = 6;
 
   static const _maxDice = 12;
+
+  @override
+  void initState() {
+    super.initState();
+    _restoreSides();
+  }
+
+  /// Herstelt de laatst gekozen soort uit de vorige sessie.
+  ///
+  /// Fouten of niet-ondersteunde waarden (bijv. een oudere app-versie) worden
+  /// genegeerd en valt de app terug op de standaard d6.
+  Future<void> _restoreSides() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final stored = prefs.getInt(kDiceSidesPrefKey);
+      if (!mounted || stored == null || !kSupportedSides.contains(stored)) {
+        return;
+      }
+      setState(() => _sides = stored);
+    } catch (_) {
+      // Opslag niet beschikbaar: de standaardkeuze d6 blijft geldig.
+    }
+  }
+
+  /// Kiest de soort dobbelsteen en bewaart de keuze voor de volgende sessie.
+  ///
+  /// Lokaal bewaren is een gemaksfunctie: mislukt het, dan geldt de keuze
+  /// gewoon voor deze sessie.
+  Future<void> _selectSides(int sides) async {
+    setState(() => _sides = sides);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(kDiceSidesPrefKey, sides);
+    } catch (_) {
+      // Niet bewaren is geen fout voor de speler.
+    }
+  }
 
   void _changeCount(int delta) {
     setState(() {
@@ -102,7 +143,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                   key: Key('sides-$sides'),
                   label: Text('$sides'),
                   selected: _sides == sides,
-                  onSelected: (_) => setState(() => _sides = sides),
+                  onSelected: (_) => _selectSides(sides),
                 ),
             ],
           ),
