@@ -23,18 +23,16 @@ void main() {
         });
 
     testWidgets(
-        'waarden 9 t/m 20 worden als ogenpatroon getoond, niet als nummer (SCRUM-20)',
+        'waarden 9 en hoger worden als nummer in casino-stijl getoond',
         (tester) async {
-          for (final value in [9, 10, 11, 12, 13, 15, 17, 20]) {
+          for (final value in [9, 10, 12, 20]) {
             await tester.pumpWidget(MaterialApp(
-              home: Scaffold(body: DieFace(value: value, size: 96)),
+              home: Scaffold(body: DieFace(value: value, size: 64)),
             ));
 
-            expect(
-                find.byKey(const Key('pip')), findsNWidgets(value),
-                reason: 'Waarde $value moet exact $value ogen tonen.');
-            expect(find.text('$value'), findsNothing,
-                reason: 'Waarde $value mag geen nummer tonen (SCRUM-20).');
+            expect(find.text('$value'), findsOneWidget,
+                reason: 'Waarde $value heeft geen klassiek patroon.');
+            expect(find.byKey(const Key('pip')), findsNothing);
           }
         });
 
