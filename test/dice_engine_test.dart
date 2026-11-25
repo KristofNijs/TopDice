@@ -52,4 +52,27 @@ void main() {
       expect(results.single, inInclusiveRange(1, 6));
     });
   });
+
+  group('Muntje (SCRUM-20)', () {
+    test('een muntje is een worp met twee zijden: alleen 1 of 2', () {
+      final results = DiceEngine.roll(count: 50, sides: 2, random: Random(3));
+      expect(results.every((v) => v == 1 || v == 2), isTrue,
+          reason: 'Een muntje kent alleen kop en munt.');
+    });
+
+    test('werpwaarde 1 betekent kop en werpwaarde 2 betekent munt', () {
+      expect(CoinSide.fromRoll(1), CoinSide.kop);
+      expect(CoinSide.fromRoll(2), CoinSide.munt);
+    });
+
+    test('andere werpwaarden zijn geen geldige muntzijde', () {
+      expect(() => CoinSide.fromRoll(0), throwsArgumentError);
+      expect(() => CoinSide.fromRoll(3), throwsArgumentError);
+    });
+
+    test('elke muntzijde heeft een leesbaar Nederlands label', () {
+      expect(CoinSide.kop.label, 'kop');
+      expect(CoinSide.munt.label, 'munt');
+    });
+  });
 }

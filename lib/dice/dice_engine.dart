@@ -1,5 +1,25 @@
 import 'dart:math';
 
+/// Zijde van een muntje: kop of munt.
+enum CoinSide {
+  kop,
+  munt;
+
+  /// Leesbaar label voor in de UI, met kleine letter zoals in een zin.
+  String get label => this == CoinSide.kop ? 'kop' : 'munt';
+
+  /// Vertaalt een muntworp (1 of 2) naar de bijbehorende zijde.
+  static CoinSide fromRoll(int value) {
+    if (value == 1) {
+      return CoinSide.kop;
+    }
+    if (value == 2) {
+      return CoinSide.munt;
+    }
+    throw ArgumentError.value(value, 'value', 'Alleen 1 (kop) en 2 (munt) zijn geldig.');
+  }
+}
+
 /// Rolls dice: pure logic, random source injectable for testing.
 class DiceEngine {
   /// Rolls [count] dice with [sides] eyes each.
