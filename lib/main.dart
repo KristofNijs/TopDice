@@ -11,18 +11,8 @@ import 'dice/dice_pips.dart';
 /// Creeert de toevalsbron voor elke worp; injecteerbaar voor tests.
 typedef RandomFactory = Random Function();
 
-/// Mogelijke soorten worpen: muntje (2 zijden) plus het klassieke palet.
-const kSupportedSides = [2, 4, 6, 8, 10, 12, 20];
-
-/// Zijden van een muntje: kop of munt.
-const int kCoinSides = 2;
-
-/// Label voor een soort in het menu: het muntje heeft een naam, de
-/// dobbelstenen worden bij hun aantal zijden genoemd.
-String sidesLabel(int sides) => sides == kCoinSides ? 'Muntje' : '$sides';
-
-/// Of een worp met dit aantal zijden een muntje is.
-bool isCoin(int sides) => sides == kCoinSides;
+/// Mogelijke aantal ogen per dobbelsteen (klassiek dobbelsteen-palet).
+const kSupportedSides = [4, 6, 8, 10, 12, 20];
 
 /// Sleutel waaronder de gekozen soort dobbelsteen bewaard wordt tussen sessies.
 const String kDiceSidesPrefKey = 'dice.sides';
@@ -118,14 +108,13 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final steenLabel = isCoin(_sides) ? 'munten' : 'dobbelstenen';
     return Scaffold(
       appBar: AppBar(title: const Text('TopDice')),
       bottomNavigationBar: const AdBanner(),
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
-          Text('Aantal $steenLabel', style: theme.textTheme.titleMedium),
+          Text('Aantal dobbelstenen', style: theme.textTheme.titleMedium),
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -146,7 +135,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
             ],
           ),
           const SizedBox(height: 24),
-          Text('Dobbelsteen of muntje', style: theme.textTheme.titleMedium),
+          Text('Ogen per dobbelsteen', style: theme.textTheme.titleMedium),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -154,7 +143,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               for (final sides in kSupportedSides)
                 ChoiceChip(
                   key: Key('sides-$sides'),
-                  label: Text(sidesLabel(sides)),
+                  label: Text('$sides'),
                   selected: _sides == sides,
                   onSelected: (_) => _selectSides(sides),
                 ),
@@ -219,12 +208,8 @@ class _ResultScreenState extends State<ResultScreen> {
     // minimum en maximum.
     final screenWidth = MediaQuery.sizeOf(context).width;
     final faceSize = (screenWidth / 6).clamp(48.0, 96.0);
-    final coin = isCoin(widget.sides);
-    final title = coin
-        ? (widget.count == 1 ? 'Muntje' : '${widget.count} munten')
-        : '${widget.count}d${widget.sides}';
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(title: Text('${widget.count}d${widget.sides}')),
       bottomNavigationBar: const AdBanner(),
       body: Center(
         child: Column(
@@ -236,24 +221,16 @@ class _ResultScreenState extends State<ResultScreen> {
               runSpacing: 12,
               children: [
                 for (final (index, value) in _values.indexed)
-                  coin
-                      ? CoinFace(
-                          key: ValueKey('coin-$index'),
-                          side: CoinSide.fromRoll(value),
-                          size: faceSize,
-                        )
-                      : DieFace(
-                          key: ValueKey('die-$index'),
-                          value: value,
-                          size: faceSize,
-                        ),
+                  DieFace(
+                    key: ValueKey('die-$index'),
+                    value: value,
+                    size: faceSize,
+                  ),
               ],
             ),
             const SizedBox(height: 16),
-            // Alleen dobbelstenen hebben een zinvol cijfertotaal;
-            // bij een muntje zegt kop/munt alles (SCRUM-20).
-            if (!coin)
-              Text('Totaal: $_total', style: theme.textTheme.titleLarge),
+            Text('Totaal: $_total',
+                style: theme.textTheme.titleLarge),
             const SizedBox(height: 32),
             FilledButton(
               key: const Key('roll-again'),
@@ -276,43 +253,8 @@ class _ResultScreenState extends State<ResultScreen> {
 }
 
 
-/// Gouden muntje met de geworpen zijde: kop of munt.
-class CoinFace extends StatelessWidget {
-  const CoinFace({super.key, required this.side, required this.size});
-
-  final CoinSide side;
-
-  /// Zijde van de munt in logical pixels; schaalt mee met het scherm.
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Semantics(
-      label: side.label,
-      child: Container(
-        width: size,
-        height: size,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: CasinoColors.gold,
-          shape: BoxShape.circle,
-          border: Border.all(color: CasinoColors.goldInk, width: size * 0.04),
-        ),
-        child: Text(
-          side.label,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: CasinoColors.goldInk,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Enkele dobbelsteen-face: klassieke ogen voor 1 t/m 8, rooster van
-/// ogen voor hogere waarden (SCRUM-20).
+/// Enkele dobbelsteen-face: klassieke ogen voor 1 t/m 8, nummer voor
+/// waarden zonder klassiek patroon (d10, d12, d20).
 class DieFace extends StatelessWidget {
   const DieFace({super.key, required this.value, required this.size});
 

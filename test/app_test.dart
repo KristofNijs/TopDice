@@ -11,7 +11,7 @@ void main() {
       await tester.pumpWidget(dice);
       expect(find.text('TopDice'), findsOneWidget);
       expect(find.text('Aantal dobbelstenen'), findsOneWidget);
-      expect(find.text('Dobbelsteen of muntje'), findsOneWidget);
+      expect(find.text('Ogen per dobbelsteen'), findsOneWidget);
       final chip = tester.widget<ChoiceChip>(
           find.ancestor(of: find.text('6'), matching: find.byType(ChoiceChip)));
       expect(chip.selected, isTrue);
