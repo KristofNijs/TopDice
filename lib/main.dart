@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'casino_theme.dart';
 import 'dice/dice_engine.dart';
+import 'dice/dice_pips.dart';
 
 /// Creeert de toevalsbron voor elke worp; injecteerbaar voor tests.
 typedef RandomFactory = Random Function();
@@ -160,6 +161,10 @@ class _ResultScreenState extends State<ResultScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // Dobbelsteengrootte schaalt mee met het scherm, met een leesbaar
+    // minimum en maximum.
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final faceSize = (screenWidth / 6).clamp(48.0, 96.0);
     return Scaffold(
       appBar: AppBar(title: Text('${widget.count}d${widget.sides}')),
       body: Center(
@@ -172,7 +177,11 @@ class _ResultScreenState extends State<ResultScreen> {
               runSpacing: 12,
               children: [
                 for (final (index, value) in _values.indexed)
-                  DieFace(key: ValueKey('die-$index'), value: value),
+                  DieFace(
+                    key: ValueKey('die-$index'),
+                    value: value,
+                    size: faceSize,
+                  ),
               ],
             ),
             const SizedBox(height: 16),
@@ -200,29 +209,43 @@ class _ResultScreenState extends State<ResultScreen> {
 }
 
 
-/// Enkele dobbelsteen-face met het gegooide aantal ogen.
+/// Enkele dobbelsteen-face: klassieke ogen voor 1 t/m 8, nummer voor
+/// waarden zonder klassiek patroon (d10, d12, d20).
 class DieFace extends StatelessWidget {
-  const DieFace({super.key, required this.value});
+  const DieFace({super.key, required this.value, required this.size});
 
   final int value;
+
+  /// Zijde van de dobbelsteen in logical pixels; schaalt mee met het scherm.
+  final double size;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      width: 64,
-      height: 64,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: CasinoColors.dieFace,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Text(
+    final Widget face;
+    if (DicePips.supports(value)) {
+      face = DicePips(count: value, size: size);
+    } else {
+      face = Text(
         '$value',
         style: theme.textTheme.headlineMedium?.copyWith(
           fontWeight: FontWeight.bold,
           color: CasinoColors.dieValue,
+          fontSize: size * 0.45,
         ),
+      );
+    }
+    return Semantics(
+      label: '$value ogen',
+      child: Container(
+        width: size,
+        height: size,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: CasinoColors.dieFace,
+          borderRadius: BorderRadius.circular(size * 0.25),
+        ),
+        child: face,
       ),
     );
   }
