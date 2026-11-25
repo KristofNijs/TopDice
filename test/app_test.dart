@@ -44,11 +44,9 @@ void main() {
       await tester.tap(find.text("Let's roll"));
       await tester.pumpAndSettle();
       expect(find.byType(ResultScreen), findsOneWidget);
-      // Random(1) levert met d6 de reeks 1, 4, 6.
-      // Random(1) levert met d6 de reeks 1, 4, 6.
-      expect(find.text('1'), findsOneWidget);
-      expect(find.text('4'), findsOneWidget);
-      expect(find.text('6'), findsOneWidget);
+      // Random(1) levert met d6 de reeks 1, 4, 6: ogen i.p.v. nummers.
+      expect(find.byType(DieFace), findsNWidgets(3));
+      expect(find.byKey(const Key('pip')), findsNWidgets(1 + 4 + 6));
       expect(find.textContaining('Totaal: 11'), findsOneWidget);
     });
   });
