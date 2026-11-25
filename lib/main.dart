@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import 'casino_theme.dart';
 import 'dice/dice_engine.dart';
 
 /// Creeert de toevalsbron voor elke worp; injecteerbaar voor tests.
@@ -21,10 +22,7 @@ class DiceApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'TopDice',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
+      theme: casinoTheme,
       home: MainMenuScreen(randomFactory: randomFactory),
     );
   }
@@ -216,13 +214,15 @@ class DieFace extends StatelessWidget {
       height: 64,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer,
+        color: CasinoColors.dieFace,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Text(
         '$value',
-        style: theme.textTheme.headlineMedium
-            ?.copyWith(fontWeight: FontWeight.bold),
+        style: theme.textTheme.headlineMedium?.copyWith(
+          fontWeight: FontWeight.bold,
+          color: CasinoColors.dieValue,
+        ),
       ),
     );
   }
