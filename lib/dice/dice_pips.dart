@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../casino_theme.dart';
@@ -49,26 +51,51 @@ const Map<int, List<Alignment>> kPipLayouts = {
   ],
 };
 
-/// Tekent [count] ogen in het klassieke patroon, geschaald naar [size].
+/// Tekent [count] ogen, geschaald naar [size].
 ///
-/// Waarden zonder klassiek patroon (9 en hoger, zoals d10/d12/d20) worden
-/// door de aanroeper als cijfer weergegeven, zoals bij echte dobbelstenen.
+/// Waarden 1 t/m 8 gebruiken de klassieke patronen hierboven; hogere
+/// waarden (9 t/m 20 voor d10, d12 en d20, SCRUM-20) krijgen een
+/// dicht, regelmatig roosterpatroon. Sinds SCRUM-20 tonen alle stenen
+/// ogen in plaats van nummers.
 class DicePips extends StatelessWidget {
   const DicePips({super.key, required this.count, required this.size});
 
   final int count;
   final double size;
 
-  /// Of er een klassiek ogenpatroon bestaat voor deze waarde.
-  static bool supports(int value) => kPipLayouts.containsKey(value);
+  /// Of deze waarde als ogenpatroon getoond kan worden.
+  static bool supports(int value) => value >= 1 && value <= 20;
+
+  /// Roosterpatroon voor waarden zonder klassiek patroon: zo vierkant
+  /// mogelijk, waarbij een incomplete laatste rij gecentreerd wordt.
+  static List<Alignment> _gridLayout(int value) {
+    final columns = math.sqrt(value).ceil();
+    final rows = (value / columns).ceil();
+    final positions = <Alignment>[];
+    for (var i = 0; i < value; i++) {
+      final row = i ~/ columns;
+      final inRow = row == rows - 1 ? value - row * columns : columns;
+      final column = i % columns;
+      final shift = (columns - inRow) / 2;
+      final x = columns == 1 ? 0.0 : (2 * (column + shift) / (columns - 1) - 1);
+      final y = rows == 1 ? 0.0 : (2 * row / (rows - 1) - 1);
+      positions.add(Alignment(x * 0.55, y * 0.55));
+    }
+    return positions;
+  }
+
+  /// Diameter van een oog, kleiner zodra het patroon dichter wordt.
+  double _pipDiameter(int value) {
+    final columns = math.sqrt(value).ceil();
+    final spacing = columns == 1 ? size * 0.55 : size * 0.55 / (columns - 1);
+    return (size * 0.17).clamp(0.0, spacing * 0.7);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final positions = kPipLayouts[count]!;
-    final pipDiameter = size * 0.17;
-    // Factor 0,55 houdt de ogen net binnen de afgeronde hoeken.
-    Alignment pipPosition(Alignment position) =>
-        Alignment(position.x * 0.55, position.y * 0.55);
+    final positions =
+        kPipLayouts[count] ?? _gridLayout(count);
+    final pipDiameter = _pipDiameter(count);
 
     return SizedBox(
       width: size,
@@ -77,7 +104,7 @@ class DicePips extends StatelessWidget {
         children: [
           for (final position in positions)
             Align(
-              alignment: pipPosition(position),
+              alignment: position,
               child: Container(
                 key: const Key('pip'),
                 width: pipDiameter,
