@@ -282,16 +282,22 @@ class DieFace extends StatelessWidget {
   final int sides;
 
   /// Grootte van het waardevlak binnen de vorm: in scherpe hoeken als
-  /// de d4 moet de waarde kleiner en lager staan.
+  /// de d4 moet de waarde kleiner en lager staan; bij de d6 staan de
+  /// ogen op het frontvlak van de kubus (SCRUM-30).
   double get _valueSize => switch (sides) {
         4 => size * 0.42,
+        6 => size * 0.66,
         8 || 10 => size * 0.58,
         12 || 20 => size * 0.66,
         _ => size * 0.90,
       };
 
-  Alignment get _valueAlignment =>
-      sides == 4 ? const Alignment(0, 0.18) : Alignment.center;
+  Alignment get _valueAlignment => switch (sides) {
+        4 => const Alignment(0, 0.18),
+        // Middelpunt van het frontvlak van de kubus.
+        6 => const Alignment(-0.16, 0.16),
+        _ => Alignment.center,
+      };
 
   @override
   Widget build(BuildContext context) {
