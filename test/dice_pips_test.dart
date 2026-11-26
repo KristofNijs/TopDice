@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:topdice/dice/dice_engine.dart';
 import 'package:topdice/main.dart';
 
 void main() {
@@ -79,6 +80,65 @@ void main() {
           reason: 'Op een groter scherm moet de dobbelsteen groter zijn.');
       expect(find.byKey(const Key('pip')), findsOneWidget,
           reason: 'Het patroon moet ook op het grotere scherm leesbaar zijn.');
+    });
+  });
+
+  group('Ogen alleen bij de d6 (SCRUM-29)', () {
+    testWidgets('de d6 toont het klassieke ogenpatroon', (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(body: DieFace(value: 4, size: 64, sides: 6)),
+      ));
+
+      expect(find.byKey(const Key('pip')), findsNWidgets(4));
+      expect(find.text('4'), findsNothing);
+    });
+
+    testWidgets('de d4 toont cijfers in plaats van ogen', (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(body: DieFace(value: 3, size: 64, sides: 4)),
+      ));
+
+      expect(find.text('3'), findsOneWidget,
+          reason: 'Een echte d4 toont cijfers, geen ogen.');
+      expect(find.byKey(const Key('pip')), findsNothing);
+    });
+
+    testWidgets('de d8 toont cijfers in plaats van ogen', (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(body: DieFace(value: 7, size: 64, sides: 8)),
+      ));
+
+      expect(find.text('7'), findsOneWidget);
+      expect(find.byKey(const Key('pip')), findsNothing);
+    });
+
+    testWidgets('de d12 en d20 tonen cijfers in plaats van ogen',
+        (tester) async {
+      for (final sides in [12, 20]) {
+        await tester.pumpWidget(MaterialApp(
+          home: Scaffold(body: DieFace(value: 5, size: 64, sides: sides)),
+        ));
+
+        expect(find.text('5'), findsOneWidget,
+            reason: 'd$sides toont cijfers.');
+        expect(find.byKey(const Key('pip')), findsNothing);
+      }
+    });
+
+    testWidgets('een d8-worp op het resultaatscherm toont cijfers',
+        (tester) async {
+      await tester.pumpWidget(DiceApp(randomFactory: () => Random(1)));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('8'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text("Let's roll"));
+      await tester.pumpAndSettle();
+
+      final value =
+          DiceEngine.roll(count: 1, sides: 8, random: Random(1)).first;
+      expect(find.text('$value'), findsOneWidget,
+          reason: 'De geworpen d8-waarde moet als cijfer zichtbaar zijn.');
+      expect(find.byKey(const Key('pip')), findsNothing);
     });
   });
 }

@@ -297,7 +297,9 @@ class DieFace extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final Widget face;
-    if (DicePips.supports(value)) {
+    // Alleen de klassieke d6 heeft ogen (SCRUM-29); de andere stenen
+    // tonen hun waarde als cijfer, zoals de echte d4/d8/d10/d12/d20.
+    if (sides == 6 && DicePips.supports(value)) {
       face = DicePips(count: value, size: _valueSize);
     } else {
       face = Text(
