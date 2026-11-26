@@ -73,6 +73,17 @@ class DiceShape extends StatelessWidget {
   static const double viewYaw = 0.55;
   static const double viewPitch = 0.38;
 
+  /// Vulkleur van een steenvlak bij de gegeven helderheid (0..1).
+  ///
+  /// De steen blijft bij elke belichting wit (SCRUM-33): de schaduw
+  /// mag de vorm slechts subtiel modelleren, nooit het vlak donker
+  /// maken. Helderheid loopt in de projectie van 0.25 t/m 1.0.
+  static Color faceColor(double brightness) => Color.lerp(
+        CasinoColors.dieFace,
+        CasinoColors.dieShadow,
+        (1.0 - brightness) * 0.30,
+      )!;
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -141,10 +152,9 @@ class _DiceShapePainter extends CustomPainter {
 
     for (final face in faces) {
       final path = Path()..addPolygon(face.outline, true);
-      // Donkere vlakken zakken richting de grijze schaduwkleur.
+      // Elk vlak blijft wit; de schaduw modelleert enkel de vorm.
       final fill = Paint()
-        ..color = Color.lerp(
-            CasinoColors.dieShadow, fillColor, face.brightness)!
+        ..color = DiceShape.faceColor(face.brightness)
         ..style = PaintingStyle.fill;
       canvas.drawPath(path, fill);
       // Contour meebewegen met het licht: donkere randen blijven subtiel.
