@@ -7,6 +7,7 @@ import 'ad_banner.dart';
 import 'casino_theme.dart';
 import 'dice/dice_engine.dart';
 import 'dice/dice_pips.dart';
+import 'dice/dice_shape.dart';
 
 /// Creeert de toevalsbron voor elke worp; injecteerbaar voor tests.
 typedef RandomFactory = Random Function();
@@ -143,7 +144,17 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               for (final sides in kSupportedSides)
                 ChoiceChip(
                   key: Key('sides-$sides'),
-                  label: Text('$sides'),
+                  label: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      DiceShape(
+                          key: Key('chip-shape-$sides'),
+                          sides: sides,
+                          size: 22),
+                      const SizedBox(width: 6),
+                      Text('$sides'),
+                    ],
+                  ),
                   selected: _sides == sides,
                   onSelected: (_) => _selectSides(sides),
                 ),
@@ -225,6 +236,7 @@ class _ResultScreenState extends State<ResultScreen> {
                     key: ValueKey('die-$index'),
                     value: value,
                     size: faceSize,
+                    sides: widget.sides,
                   ),
               ],
             ),
@@ -253,43 +265,62 @@ class _ResultScreenState extends State<ResultScreen> {
 }
 
 
-/// Enkele dobbelsteen-face: klassieke ogen voor 1 t/m 8, nummer voor
-/// waarden zonder klassiek patroon (d10, d12, d20).
+/// Enkele dobbelsteen-face in de vorm van het echte D&D-type (SCRUM-28):
+/// tetraëder voor d4, kubus voor d6, ruit voor d8, vlieger voor d10,
+/// vijfhoek voor d12 en zeshoek voor d20. De waarde staat als klassiek
+/// ogenpatroon (1 t/m 8) of als nummer (9 en hoger) op de vorm.
 class DieFace extends StatelessWidget {
-  const DieFace({super.key, required this.value, required this.size});
+  const DieFace(
+      {super.key, required this.value, required this.size, required this.sides});
 
   final int value;
 
   /// Zijde van de dobbelsteen in logical pixels; schaalt mee met het scherm.
   final double size;
 
+  /// Aantal zijden van de dobbelsteen: bepaalt de vorm van de graphic.
+  final int sides;
+
+  /// Grootte van het waardevlak binnen de vorm: in scherpe hoeken als
+  /// de d4 moet de waarde kleiner en lager staan.
+  double get _valueSize => switch (sides) {
+        4 => size * 0.42,
+        8 || 10 => size * 0.58,
+        12 || 20 => size * 0.66,
+        _ => size * 0.90,
+      };
+
+  Alignment get _valueAlignment =>
+      sides == 4 ? const Alignment(0, 0.18) : Alignment.center;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final Widget face;
     if (DicePips.supports(value)) {
-      face = DicePips(count: value, size: size);
+      face = DicePips(count: value, size: _valueSize);
     } else {
       face = Text(
         '$value',
         style: theme.textTheme.headlineMedium?.copyWith(
           fontWeight: FontWeight.bold,
           color: CasinoColors.dieValue,
-          fontSize: size * 0.45,
+          fontSize: _valueSize * 0.45,
         ),
       );
     }
     return Semantics(
       label: '$value ogen',
-      child: Container(
+      child: SizedBox(
         width: size,
         height: size,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: CasinoColors.dieFace,
-          borderRadius: BorderRadius.circular(size * 0.25),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            DiceShape(sides: sides, size: size),
+            Align(alignment: _valueAlignment, child: face),
+          ],
         ),
-        child: face,
       ),
     );
   }
