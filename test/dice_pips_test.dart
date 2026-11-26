@@ -11,7 +11,7 @@ void main() {
         (tester) async {
           for (final value in [1, 2, 3, 4, 5, 6, 7, 8]) {
             await tester.pumpWidget(MaterialApp(
-              home: Scaffold(body: DieFace(value: value, size: 64)),
+              home: Scaffold(body: DieFace(value: value, size: 64, sides: 6)),
             ));
 
             expect(
@@ -27,7 +27,7 @@ void main() {
         (tester) async {
           for (final value in [9, 10, 12, 20]) {
             await tester.pumpWidget(MaterialApp(
-              home: Scaffold(body: DieFace(value: value, size: 64)),
+              home: Scaffold(body: DieFace(value: value, size: 64, sides: 6)),
             ));
 
             expect(find.text('$value'), findsOneWidget,
