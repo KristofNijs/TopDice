@@ -9,11 +9,12 @@ TopDice is een dobbelsteen-app voor Android in casinostijl: kies het aantal dobb
 - Echte 3D-dobbelstenen: elke steen is een driedimensionaal veelvlak (tetraëder, kubus, octaëder, pentagonale trapezoëder, dodecaëder, icosaëder) dat geroteerd en belicht getekend wordt, vlak voor vlak in schildersvolgorde
 - Vormgetrouwe graphics per type in het startscherm én op het resultaatscherm
 - De d6 toont klassieke ogenpatronen; de andere stenen tonen hun waarde als cijfer, zoals de echte stenen
+- Witte dobbelstenen met zwarte ogen (d6) en zwarte cijfers, zoals klassieke stenen; de 3D-belichting gebruikt een neutrale grijze schaduw. Alle steenkleuren staan centraal in het palet (`CasinoColors`), zodat een toekomstig themasysteem ze kan overschrijven
 - 3D-tuimelanimatie bij elke worp, die eindigt op het definitieve resultaat en soepel blijft op trage toestellen; tik op het scherm om de animatie over te slaan
 - De gekozen dobbelsteensoort wordt bewaard tussen sessies (`shared_preferences`)
 - Resultaatscherm met totaalsom, "Opnieuw gooien" en teruggaan naar het menu
 - Dobbelstenen schalen mee met de schermgrootte en zijn toegankelijk via `Semantics`-labels
-- Casino-thema: tafelgroene achtergrond op elk scherm, gouden accenten en WCAG AA-contrast (minimaal 4,5:1)
+- Casino-thema: tafelgroene achtergrond op elk scherm, gouden accenten op knoppen en dobbelsteencontouren, en WCAG AA-contrast (minimaal 4,5:1)
 - Vaste advertentiebalk onderaan elk scherm (placeholder tijdens ontwikkeling, uitbreidbaar met echte advertentiecontent)
 
 ## Technologie

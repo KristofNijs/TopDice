@@ -141,10 +141,10 @@ class _DiceShapePainter extends CustomPainter {
 
     for (final face in faces) {
       final path = Path()..addPolygon(face.outline, true);
-      // Donkere vlakken zakken richting donker tafelgroen.
+      // Donkere vlakken zakken richting de grijze schaduwkleur.
       final fill = Paint()
         ..color = Color.lerp(
-            CasinoColors.tableGreenDark, fillColor, face.brightness)!
+            CasinoColors.dieShadow, fillColor, face.brightness)!
         ..style = PaintingStyle.fill;
       canvas.drawPath(path, fill);
       // Contour meebewegen met het licht: donkere randen blijven subtiel.
@@ -201,11 +201,11 @@ class _DiceShapePainter extends CustomPainter {
     }
   }
 
-  /// Gearceerde zijkant: ivoor met een vleug tafelgroen, zodat de
-  /// kubusdiepte leesbaar blijft binnen het casino-palet.
+  /// Gearceerde zijkant: wit met een vleug grijs, zodat de
+  /// kubusdiepte leesbaar blijft bij een witte steen (SCRUM-33).
   Color _shadedFace() {
     return Color.alphaBlend(
-      CasinoColors.tableGreenDark.withValues(alpha: 0.12),
+      CasinoColors.dieShadow.withValues(alpha: 0.12),
       fillColor,
     );
   }
