@@ -171,6 +171,56 @@ void main() {
     });
   });
 
+  group('3D-dobbelstenen (SCRUM-31)', () {
+    test('elke steen onthult het juiste 3D-model', () {
+      const expected = {
+        4: (4, 4), // tetraëder: 4 hoekpunten, 4 vlakken
+        6: (8, 6), // kubus
+        8: (6, 8), // octaëder
+        10: (12, 10), // pentagonale trapezoëder
+        12: (20, 12), // dodecaëder
+        20: (12, 20), // icosaëder
+      };
+      for (final entry in expected.entries) {
+        final shape = DiceShape(sides: entry.key, size: 64);
+        final model = shape.model;
+        expect(model.vertexCount, entry.value.$1,
+            reason: 'd${entry.key}: verkeerd aantal hoekpunten.');
+        expect(model.faceCount, entry.value.$2,
+            reason: 'd${entry.key}: verkeerd aantal vlakken.');
+      }
+    });
+
+    test('elk model voldoet aan de veelvlakformule van Euler', () {
+      for (final sides in [4, 6, 8, 10, 12, 20]) {
+        final model = DiceShape(sides: sides, size: 64).model;
+        expect(model.vertexCount - model.edgeCount + model.faceCount, 2,
+            reason: 'd$sides is geen gesloten veelvlak.');
+      }
+    });
+
+    testWidgets('elke steen tekent als 3D-graphic op volledige grootte',
+        (tester) async {
+      for (final sides in [4, 8, 10, 12, 20]) {
+        await tester.pumpWidget(MaterialApp(
+          home: Scaffold(
+            body:
+                DiceShape(key: Key('shape3d-$sides'), sides: sides, size: 80),
+          ),
+        ));
+
+        expect(tester.getSize(find.byKey(Key('shape3d-$sides'))),
+            const Size(80, 80));
+        expect(
+            find.descendant(
+                of: find.byKey(Key('shape3d-$sides')),
+                matching: find.byType(CustomPaint)),
+            findsOneWidget,
+            reason: 'd$sides moet als 3D-object getekend worden.');
+      }
+    });
+  });
+
   group('D&D-vormgetrouw in de app (SCRUM-28)', () {
     testWidgets('elke typekeuze in het startscherm toont zijn eigen graphic',
         (tester) async {

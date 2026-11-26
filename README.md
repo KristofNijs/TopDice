@@ -6,7 +6,8 @@ TopDice is een dobbelsteen-app voor Android in casinostijl: kies het aantal dobb
 
 - Menu met keuze van 1 tot 12 dobbelstenen
 - Ondersteuning voor d4, d6, d8, d10, d12 en d20
-- Vormgetrouwe graphics per type: tetraëder (d4), kubus (d6), ruit (d8), vlieger (d10), vijfhoek (d12) en zeshoek (d20), in het startscherm én op het resultaatscherm
+- Echte 3D-dobbelstenen: elke steen is een driedimensionaal veelvlak (tetraëder, kubus, octaëder, pentagonale trapezoëder, dodecaëder, icosaëder) dat geroteerd en belicht getekend wordt, vlak voor vlak in schildersvolgorde
+- Vormgetrouwe graphics per type in het startscherm én op het resultaatscherm
 - De d6 toont klassieke ogenpatronen; de andere stenen tonen hun waarde als cijfer, zoals de echte stenen
 - 3D-tuimelanimatie bij elke worp, die eindigt op het definitieve resultaat en soepel blijft op trage toestellen; tik op het scherm om de animatie over te slaan
 - De gekozen dobbelsteensoort wordt bewaard tussen sessies (`shared_preferences`)
@@ -20,6 +21,7 @@ TopDice is een dobbelsteen-app voor Android in casinostijl: kies het aantal dobb
 - Flutter (Dart), Material 3
 - Package: `com.wodanixgames.topdice`
 - Worpen via `DiceEngine` met injecteerbare toevalsbron, volledig unittestbaar
+- 3D-weergave via een eigen orthografische projectie met belichting (`dice_projection.dart`), zonder externe 3D-packages
 
 ## Projectstructuur
 
@@ -31,7 +33,9 @@ lib/
   dice/
     dice_engine.dart   # worpen-logica (injecteerbare toevalsbron)
     dice_pips.dart     # klassieke ogenpatronen voor de d6
-    dice_shape.dart    # vormgetrouwe D&D-graphics per dobbelsteentype
+    dice_shape.dart    # 3D-weergave per dobbelsteentype (d6 als kubus)
+    dice_model.dart    # veelvlakmodellen: vertices en vlakken per steen
+    dice_projection.dart # rotatie, belichting en 2D-projectie van de modellen
 test/                  # widget- en unit-tests (flutter_test)
 ```
 
