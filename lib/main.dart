@@ -193,23 +193,108 @@ class ResultScreen extends StatefulWidget {
   State<ResultScreen> createState() => _ResultScreenState();
 }
 
-class _ResultScreenState extends State<ResultScreen> {
+class _ResultScreenState extends State<ResultScreen>
+    with TickerProviderStateMixin {
   late List<int> _values = DiceEngine.roll(
     count: widget.count,
     sides: widget.sides,
     random: widget.randomFactory(),
   );
 
+  /// Tuimelanimatie bij elke worp (SCRUM-21); alleen transform-based,
+  /// zodat de animatie ook op trage toestellen soepel blijft.
+  static const _tumbleDuration = Duration(milliseconds: 600);
+
+  late final AnimationController _tumble = AnimationController(
+    vsync: this,
+    duration: _tumbleDuration,
+  )..forward();
+
+  /// Tussenliggende waarden per dobbelsteen tijdens het tuimelen:
+  /// vier willekeurige frames, gevolgd door de echte worp.
+  late final List<List<int>> _tumbleFrames = _generateTumbleFrames();
+
+  List<List<int>> _generateTumbleFrames() {
+    final random = widget.randomFactory();
+    return [
+      for (var i = 0; i < widget.count; i++)
+        [for (var f = 0; f < 4; f++) random.nextInt(widget.sides) + 1],
+    ];
+  }
+
+  /// Of de dobbelstenen nog aan het tuimelen zijn.
+  bool get _animating => _tumble.status != AnimationStatus.completed;
+
   int get _total => _values.fold(0, (a, b) => a + b);
 
   void _rollAgain() {
     setState(() {
-      _values = DiceEngine.roll(
-        count: widget.count,
-        sides: widget.sides,
-        random: widget.randomFactory(),
-      );
+      _valuesNewRoll();
+      _tumble.forward(from: 0);
     });
+  }
+
+  void _valuesNewRoll() {
+    _values = DiceEngine.roll(
+      count: widget.count,
+      sides: widget.sides,
+      random: widget.randomFactory(),
+    );
+  }
+
+  /// Een tik op het scherm slaat de animatie over: meteen naar het
+  /// definitieve resultaat (SCRUM-21, overslaan is verplicht).
+  void _skipAnimation() {
+    if (_animating) {
+      _tumble.stop();
+      _tumble.value = 1;
+    }
+  }
+
+  /// Waarde die de dobbelsteen op tijdstip [t] (0.0 t/m 1.0) toont.
+  int _shownValue(int index, double t) {
+    if (!_animating) {
+      return _values[index];
+    }
+    final frames = _tumbleFrames[index];
+    final frame = (t * frames.length).floor().clamp(0, frames.length - 1);
+    return frames[frame];
+  }
+
+  /// De tuimelende dobbelsteen: roteert om twee assen en komt tot rust
+  /// op de echte waarde zodra de animatie klaar is.
+  Widget _tumblingDie(int index, double faceSize) {
+    return AnimatedBuilder(
+      animation: _tumble,
+      builder: (context, _) {
+        final face = DieFace(
+          key: ValueKey('die-$index'),
+          value: _shownValue(index, _tumble.value),
+          size: faceSize,
+          sides: widget.sides,
+        );
+        if (!_animating) {
+          return face;
+        }
+        final eased = Curves.easeOut.transform(_tumble.value);
+        // Volledige slagen in de laatste fase: hoe dichter bij het einde,
+        // hoe langzamer het tuimelen, tot de steen stilvalt.
+        final matrix = Matrix4.rotationX((1 - eased) * 2 * pi);
+        matrix.multiply(Matrix4.rotationY((1 - eased) * 3 * pi));
+        return Transform(
+          key: const Key('tumbling'),
+          transform: matrix,
+          alignment: Alignment.center,
+          child: face,
+        );
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _tumble.dispose();
+    super.dispose();
   }
 
   @override
@@ -222,24 +307,23 @@ class _ResultScreenState extends State<ResultScreen> {
     return Scaffold(
       appBar: AppBar(title: Text('${widget.count}d${widget.sides}')),
       bottomNavigationBar: const AdBanner(),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                for (final (index, value) in _values.indexed)
-                  DieFace(
-                    key: ValueKey('die-$index'),
-                    value: value,
-                    size: faceSize,
-                    sides: widget.sides,
-                  ),
-              ],
-            ),
+      // Tikken op het scherm slaat de tuimelanimatie over.
+      body: GestureDetector(
+        key: const Key('die-skip-overlay'),
+        onTap: _skipAnimation,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  for (var index = 0; index < _values.length; index++)
+                    _tumblingDie(index, faceSize),
+                ],
+              ),
             const SizedBox(height: 16),
             Text('Totaal: $_total',
                 style: theme.textTheme.titleLarge),
@@ -258,6 +342,7 @@ class _ResultScreenState extends State<ResultScreen> {
               child: const Text('Andere dobbelstenen'),
             ),
           ],
+          ),
         ),
       ),
     );

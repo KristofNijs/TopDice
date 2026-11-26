@@ -1,13 +1,16 @@
 # TopDice
 
-TopDice is een dobbelsteen-app voor Android in casinostijl: kies het aantal dobbelstenen en de soort (d4 t/m d20), tik op **Let's roll** en gooi. Het resultaatscherm toont echte ogenpatronen en de totaalsom, en je kunt ter plekke opnieuw gooien of terug naar het menu.
+TopDice is een dobbelsteen-app voor Android in casinostijl: kies het aantal dobbelstenen en de soort (d4 t/m d20), tik op **Let's roll** en gooi. De stenen tuimelen in 3D naar hun resultaat, het resultaatscherm toont vormgetrouwe graphics met de totaalsom, en je kunt ter plekke opnieuw gooien of terug naar het menu.
 
 ## Features
 
 - Menu met keuze van 1 tot 12 dobbelstenen
 - Ondersteuning voor d4, d6, d8, d10, d12 en d20
+- Vormgetrouwe graphics per type: tetraëder (d4), kubus (d6), ruit (d8), vlieger (d10), vijfhoek (d12) en zeshoek (d20), in het startscherm én op het resultaatscherm
+- De d6 toont klassieke ogenpatronen; de andere stenen tonen hun waarde als cijfer, zoals de echte stenen
+- 3D-tuimelanimatie bij elke worp, die eindigt op het definitieve resultaat en soepel blijft op trage toestellen; tik op het scherm om de animatie over te slaan
 - De gekozen dobbelsteensoort wordt bewaard tussen sessies (`shared_preferences`)
-- Resultaatscherm met klassieke ogenpatronen (1 t/m 8 ogen) of een cijfer in casino-stijl voor d10/d12/d20, met totaalsom, "Opnieuw gooien" en teruggaan naar het menu
+- Resultaatscherm met totaalsom, "Opnieuw gooien" en teruggaan naar het menu
 - Dobbelstenen schalen mee met de schermgrootte en zijn toegankelijk via `Semantics`-labels
 - Casino-thema: tafelgroene achtergrond op elk scherm, gouden accenten en WCAG AA-contrast (minimaal 4,5:1)
 - Vaste advertentiebalk onderaan elk scherm (placeholder tijdens ontwikkeling, uitbreidbaar met echte advertentiecontent)
@@ -22,12 +25,13 @@ TopDice is een dobbelsteen-app voor Android in casinostijl: kies het aantal dobb
 
 ```text
 lib/
-  main.dart            # DiceApp, hoofdmenu- en resultaatscherm
+  main.dart            # DiceApp, hoofdmenu- en resultaatscherm (incl. tuimelanimatie)
   casino_theme.dart    # casino-thema en kleurenpalet (CasinoColors)
   ad_banner.dart       # advertentiebalk onderaan elk scherm
   dice/
     dice_engine.dart   # worpen-logica (injecteerbare toevalsbron)
-    dice_pips.dart     # klassieke ogenpatronen voor 1 t/m 8 ogen
+    dice_pips.dart     # klassieke ogenpatronen voor de d6
+    dice_shape.dart    # vormgetrouwe D&D-graphics per dobbelsteentype
 test/                  # widget- en unit-tests (flutter_test)
 ```
 
