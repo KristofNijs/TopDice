@@ -19,11 +19,18 @@ class CasinoColors {
   /// Bijna-wit, zoals een ivoorkleurige dobbelsteen.
   static const Color ivory = Color(0xFFFFF8E7);
 
-  /// Achtergrondkleur van een dobbelsteen-face.
-  static const Color dieFace = ivory;
+  /// Achtergrondkleur van een dobbelsteen-face: wit, zoals een
+  /// klassieke dobbelsteen (SCRUM-33).
+  static const Color dieFace = Color(0xFFFFFFFF);
 
-  /// Tekstkleur van de dobbelsteenwaarde op [dieFace].
-  static const Color dieValue = tableGreenDark;
+  /// Tekstkleur van de dobbelsteenwaarde op [dieFace]: zwart,
+  /// zoals de ogen en cijfers op echte stenen (SCRUM-33).
+  static const Color dieValue = Color(0xFF000000);
+
+  /// Neutrale grijze schaduwkleur voor de 3D-belichting van de
+  /// steenvlakken: donkerder dan [dieFace], zodat de vorm leesbaar
+  /// blijft zonder de witte steen groenig te kleuren.
+  static const Color dieShadow = Color(0xFF595959);
 }
 
 /// Het casino-thema van de app: tafelgroene achtergrond op elk scherm,

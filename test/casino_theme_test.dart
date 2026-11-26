@@ -93,4 +93,38 @@ void main() {
           greaterThan(4.5));
     });
   });
+
+  group('Witte dobbelstenen met zwarte waarde (SCRUM-33)', () {
+    test('de dobbelsteen-face is zuiver wit', () {
+      expect(CasinoColors.dieFace, const Color(0xFFFFFFFF),
+          reason: 'Klassieke dobbelstenen zijn wit (SCRUM-33).');
+    });
+
+    test('de dobbelsteenwaarde is zwart', () {
+      expect(CasinoColors.dieValue, const Color(0xFF000000),
+          reason: 'Ogen (d6) en cijfers (overige stenen) zijn zwart.');
+    });
+
+    test('er is een schaduwkleur voor de 3D-belichting van de steen', () {
+      expect(CasinoColors.dieShadow, isA<Color>());
+      // De schaduw moet duidelijk donkerder zijn dan de witte steen,
+      // anders leest de 3D-vorm niet.
+      expect(_contrastRatio(CasinoColors.dieShadow, CasinoColors.dieFace),
+          greaterThan(3.0),
+          reason:
+              'De belichting op de steenvlakken moet zichtbaar blijven.');
+    });
+
+    test('de schaduwkleur is neutraal, geen tafelgroen', () {
+      // Een witte dobbelsteen mag niet groenig schaduwen: de schaduw
+      // hoort een grijstint te zijn.
+      final shadow = CasinoColors.dieShadow;
+      final maxChannel = [shadow.r, shadow.g, shadow.b]
+          .reduce((a, b) => a > b ? a : b);
+      final minChannel = [shadow.r, shadow.g, shadow.b]
+          .reduce((a, b) => a < b ? a : b);
+      expect(maxChannel - minChannel, lessThan(0.02),
+          reason: 'De schaduw van een witte steen is een grijstint.');
+    });
+  });
 }
