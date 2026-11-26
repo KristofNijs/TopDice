@@ -221,6 +221,34 @@ void main() {
     });
   });
 
+  group('Witte 3D-stenen (SCRUM-33)', () {
+    test('een vol belicht vlak is zuiver wit', () {
+      expect(DiceShape.faceColor(1.0), CasinoColors.dieFace,
+          reason: 'Het helderste vlak van elke steen is zuiver wit.');
+    });
+
+    test('ook het donkerste vlak blijft duidelijk wit', () {
+      // De 3D-belichting loopt van helder 1.0 tot minimaal 0.25:
+      // elk vlak moet licht blijven, anders oogt de steen grijs
+      // in plaats van wit.
+      for (final brightness in [0.25, 0.5, 0.75, 1.0]) {
+        final color = DiceShape.faceColor(brightness);
+        expect(_relativeLuminance(color), greaterThan(0.5),
+            reason: 'Een vlak met helderheid $brightness oogt niet wit.');
+      }
+    });
+
+    test('de zwarte waarde houdt AA-contrast op elk belicht vlak', () {
+      for (final brightness in [0.25, 0.5, 0.75, 1.0]) {
+        expect(
+          _contrastRatio(CasinoColors.dieValue, DiceShape.faceColor(brightness)),
+          greaterThan(4.5),
+          reason: 'Waarde op vlak met helderheid $brightness is niet leesbaar.',
+        );
+      }
+    });
+  });
+
   group('D&D-vormgetrouw in de app (SCRUM-28)', () {
     testWidgets('elke typekeuze in het startscherm toont zijn eigen graphic',
         (tester) async {
