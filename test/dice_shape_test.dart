@@ -140,35 +140,37 @@ void main() {
     });
   });
 
-  group('D&D-vormgetrouw in de app (SCRUM-28)', () {
-    testWidgets('elke typekeuze in het startscherm toont zijn eigen graphic',
+  group('D&D-vormgetrouw in de app (SCRUM-28/36)', () {
+    testWidgets('elke soort in het startscherm toont zijn eigen graphic',
         (tester) async {
       await tester.pumpWidget(DiceApp(randomFactory: () => math.Random(1)));
       await tester.pumpAndSettle();
 
       for (final sides in [4, 6, 8, 10, 12, 20]) {
         final shape = tester.widget<DiceShape>(
-            find.byKey(Key('chip-shape-$sides')));
+            find.byKey(Key('pool-shape-$sides')));
         expect(shape.sides, sides,
-            reason: 'De chip van d$sides hoort de d$sides-vorm te tonen.');
+            reason: 'De rij van d$sides hoort de d$sides-vorm te tonen.');
       }
     });
 
-    testWidgets('het resultaatscherm toont de vorm van het gekozen type',
+    testWidgets('het resultaatscherm toont de vormen van de gekozen soorten',
         (tester) async {
-      for (final sides in [4, 20]) {
-        await tester.pumpWidget(const SizedBox.shrink());
-        await tester.pumpWidget(DiceApp(randomFactory: () => math.Random(1)));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('$sides'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text("Let's roll"));
-        await tester.pumpAndSettle();
+      // Pool: 1 d4 en 1 d20.
+      await tester.pumpWidget(DiceApp(randomFactory: () => math.Random(1)));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('add-4')));
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('add-20')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text("Let's roll"));
+      await tester.pumpAndSettle();
 
+      for (final sides in [4, 20]) {
         expect(
             find.byWidgetPredicate(
                 (w) => w is DiceShape && w.sides == sides),
-            findsOneWidget,
+            findsAtLeastNWidgets(1),
             reason: 'd$sides moet op het resultaatscherm vormgetrouw zijn.');
       }
     });
