@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../casino_theme.dart';
-import 'dice_model.dart';
-import 'dice_projection.dart';
 
 /// De drie zichtbare vlakken van de kubus, in genormaliseerde
 /// coördinaten (0.0 t/m 1.0).
@@ -44,14 +42,12 @@ CubeFaces cubeFaces() => const CubeFaces(
       ],
     );
 
-/// Vormgetrouwe dobbelsteen-graphic per type (SCRUM-28/31).
+/// Vormgetrouwe D&D-graphic per dobbelsteentype (SCRUM-28).
 ///
-/// Elke steen is een echt 3D-object (SCRUM-31): de polyhedronmodellen
-/// uit [dice_model] worden geroteerd, belicht en vlak voor vlak
-/// getekend in schildersvolgorde. De d6 tekent als klassieke
-/// isometrische kubus met frontvlak voor de ogen (SCRUM-30). De
-/// vormgeving gebruikt het casino-palet: ivoor met goud, donkere
-/// vlakken schaduwen richting tafelgroen.
+/// Tekent het herkenbare silhouet van elke dobbelsteen: tetraëder voor
+/// d4, kubus voor d6, ruit voor d8, vlieger voor d10,
+/// vijfhoek voor d12 en zeshoek voor d20. De vormgeving gebruikt het
+/// casino-palet: ivoorkleurig vlak met een gouden contourlijn.
 class DiceShape extends StatelessWidget {
   const DiceShape({super.key, required this.sides, required this.size});
 
@@ -64,25 +60,58 @@ class DiceShape extends StatelessWidget {
   /// Of er een vormgetrouwe graphic bestaat voor dit aantal zijden.
   static bool supports(int sides) => const [4, 6, 8, 10, 12, 20].contains(sides);
 
-  /// Het 3D-model achter deze steen (SCRUM-31): vertices en vlakken
-  /// van het bijbehorende veelvlak, genormaliseerd op straal 1.
-  Polyhedron get model => polyhedronFor(sides);
-
-  /// Vaste stand waarin elke steen getekend wordt: een kwartslag
-  /// gedraaid en licht gekanteld, zodat meerdere vlakken zichtbaar zijn.
-  static const double viewYaw = 0.55;
-  static const double viewPitch = 0.38;
-
-  /// Vulkleur van een steenvlak bij de gegeven helderheid (0..1).
+  /// Hoekpunten van de vorm in een genormaliseerd vlak (0.0 t/m 1.0).
   ///
-  /// De steen blijft bij elke belichting wit (SCRUM-33): de schaduw
-  /// mag de vorm slechts subtiel modelleren, nooit het vlak donker
-  /// maken. Helderheid loopt in de projectie van 0.25 t/m 1.0.
-  static Color faceColor(double brightness) => Color.lerp(
-        CasinoColors.dieFace,
-        CasinoColors.dieShadow,
-        (1.0 - brightness) * 0.30,
-      )!;
+  /// Null voor d6: de kubus heeft drie vlakken in plaats van één
+  /// silhouet-polygon, zie [cubeFaces].
+  List<Offset>? get _polygon {
+    switch (sides) {
+      case 4:
+        // Tetraëder van boven gezien: driehoek.
+        return const [
+          Offset(0.50, 0.02),
+          Offset(0.98, 0.98),
+          Offset(0.02, 0.98),
+        ];
+      case 8:
+        // Ruit van twee tetraëders.
+        return const [
+          Offset(0.50, 0.01),
+          Offset(0.99, 0.50),
+          Offset(0.50, 0.99),
+          Offset(0.01, 0.50),
+        ];
+      case 10:
+        // Vliegervorm van de d10 (pentagonal trapezohedron).
+        return const [
+          Offset(0.50, 0.01),
+          Offset(0.90, 0.35),
+          Offset(0.50, 0.99),
+          Offset(0.10, 0.35),
+        ];
+      case 12:
+        // Vijfhoek van de dodecaëder.
+        return const [
+          Offset(0.50, 0.01),
+          Offset(0.99, 0.39),
+          Offset(0.80, 0.99),
+          Offset(0.20, 0.99),
+          Offset(0.01, 0.39),
+        ];
+      case 20:
+        // Zeshoek van de icosaëder.
+        return const [
+          Offset(0.50, 0.01),
+          Offset(0.99, 0.26),
+          Offset(0.99, 0.74),
+          Offset(0.50, 0.99),
+          Offset(0.01, 0.74),
+          Offset(0.01, 0.26),
+        ];
+      default:
+        return null;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -91,8 +120,7 @@ class DiceShape extends StatelessWidget {
       height: size,
       child: CustomPaint(
         painter: _DiceShapePainter(
-          sides: sides,
-          model: sides == 6 ? null : model,
+          polygon: _polygon,
           isCube: sides == 6,
           strokeColor: CasinoColors.gold,
           fillColor: CasinoColors.dieFace,
@@ -103,20 +131,17 @@ class DiceShape extends StatelessWidget {
   }
 }
 
-/// Tekent de dobbelsteen: 3D-projectie met belichting, of voor de d6
-/// de klassieke kubus met gouden contourlijnen.
+/// Tekent de silhouetvulling en de gouden contour van een dobbelsteen.
 class _DiceShapePainter extends CustomPainter {
   const _DiceShapePainter({
-    required this.sides,
-    required this.model,
+    required this.polygon,
     required this.isCube,
     required this.strokeColor,
     required this.fillColor,
     required this.strokeWidth,
   });
 
-  final int sides;
-  final Polyhedron? model;
+  final List<Offset>? polygon;
   final bool isCube;
   final Color strokeColor;
   final Color fillColor;
@@ -125,50 +150,40 @@ class _DiceShapePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final stroke = strokeWidth.clamp(1.0, size.width / 12);
-    if (isCube) {
-      _paintCube(canvas, size, stroke);
-      return;
-    }
-    if (model != null) {
-      _paint3D(canvas, size, stroke);
-    }
-  }
-
-  /// Echte 3D-weergave (SCRUM-31): het model wordt geroteerd en
-  /// belicht; de vlakken worden van achter naar voren gevuld. Lichte
-  /// vlakken zijn ivoor, donkere vlakken schaduwen richting donker
-  /// tafelgroen, en de gouden contour verheldert met het licht.
-  void _paint3D(Canvas canvas, Size size, double stroke) {
-    final faces = DiceProjection.project(model!,
-        yaw: DiceShape.viewYaw,
-        pitch: DiceShape.viewPitch,
-        size: size.width);
-
     final outline = Paint()
       ..color = strokeColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = stroke
       ..strokeJoin = StrokeJoin.round;
+    final fill = Paint()
+      ..color = fillColor
+      ..style = PaintingStyle.fill;
 
-    for (final face in faces) {
-      final path = Path()..addPolygon(face.outline, true);
-      // Elk vlak blijft wit; de schaduw modelleert enkel de vorm.
-      final fill = Paint()
-        ..color = DiceShape.faceColor(face.brightness)
-        ..style = PaintingStyle.fill;
-      canvas.drawPath(path, fill);
-      // Contour meebewegen met het licht: donkere randen blijven subtiel.
-      canvas.drawPath(
-        path,
-        outline
-          ..color = strokeColor.withValues(alpha: 0.35 + 0.65 * face.brightness),
-      );
+    if (isCube) {
+      _paintCube(canvas, size, stroke, outline, fill);
+      return;
     }
+    if (polygon == null) {
+      return;
+    }
+
+    final points = [
+      for (final point in polygon!)
+        Offset(point.dx * size.width, point.dy * size.height),
+    ];
+    final path = Path()..addPolygon(points, true);
+    // Iets opspringen zodat de contour op de rand blijft en niet afgesneden.
+    final center = Offset(size.width / 2, size.height / 2);
+    final shrunk = _shrink(path, center, stroke / 2);
+
+    canvas.drawPath(shrunk, fill);
+    canvas.drawPath(shrunk, outline);
   }
 
   /// Isometrische kubus (SCRUM-30): gouden bovenvlak, gearceerde zijkant
   /// en een ivoorkleurig frontvlak met gouden contourlijnen.
-  void _paintCube(Canvas canvas, Size size, double stroke) {
+  void _paintCube(Canvas canvas, Size size, double stroke, Paint outline,
+      Paint frontFill) {
     final faces = cubeFaces();
     Path scaled(List<Offset> face) => Path()
       ..addPolygon(
@@ -198,9 +213,7 @@ class _DiceShapePainter extends CustomPainter {
       ..style = PaintingStyle.fill;
     canvas.drawPath(topPath, goldFill);
     canvas.drawPath(sidePath, sideFill);
-    canvas.drawPath(frontPath, Paint()
-      ..color = fillColor
-      ..style = PaintingStyle.fill);
+    canvas.drawPath(frontPath, frontFill);
     final strokePaint = Paint()
       ..color = strokeColor
       ..style = PaintingStyle.stroke
@@ -211,18 +224,37 @@ class _DiceShapePainter extends CustomPainter {
     }
   }
 
-  /// Gearceerde zijkant: wit met een vleug grijs, zodat de
-  /// kubusdiepte leesbaar blijft bij een witte steen (SCRUM-33).
+  /// Gearceerde zijkant: ivoor met een vleug tafelgroen, zodat de
+  /// kubusdiepte leesbaar blijft binnen het casino-palet.
   Color _shadedFace() {
     return Color.alphaBlend(
-      CasinoColors.dieShadow.withValues(alpha: 0.12),
+      CasinoColors.tableGreenDark.withValues(alpha: 0.12),
       fillColor,
     );
   }
 
+  /// Trekt de polygon een halve lijnbreedte richting het middelpunt,
+  /// zodat de volledige contour binnen de opgegeven grootte blijft.
+  Path _shrink(Path path, Offset center, double amount) {
+    final matrix = Matrix4.identity();
+    final bounds = path.getBounds();
+    final w = bounds.width;
+    final h = bounds.height;
+    if (w == 0 || h == 0) {
+      return path;
+    }
+    matrix.translateByDouble(center.dx, center.dy, 0.0, 1.0);
+    final scale = Matrix4.identity()
+      ..scaleByDouble(
+          (w - 2 * amount) / w, (h - 2 * amount) / h, 1.0, 1.0);
+    matrix.multiply(scale);
+    matrix.translateByDouble(-center.dx, -center.dy, 0.0, 1.0);
+    return path.transform(matrix.storage);
+  }
+
   @override
   bool shouldRepaint(covariant _DiceShapePainter old) =>
-      old.sides != sides ||
+      old.polygon != polygon ||
       old.strokeColor != strokeColor ||
       old.fillColor != fillColor ||
       old.strokeWidth != strokeWidth;
