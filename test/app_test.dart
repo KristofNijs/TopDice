@@ -19,6 +19,18 @@ void main() {
           '1 van 12 dobbelstenen');
     });
 
+    testWidgets('de dobbelsteen-graphics in het startscherm zijn groot',
+        (tester) async {
+      await tester.pumpWidget(DiceApp(randomFactory: () => Random(1)));
+      await tester.pumpAndSettle();
+
+      for (final sides in [4, 6, 8, 10, 12, 20]) {
+        expect(tester.getSize(find.byKey(Key('pool-shape-$sides'))),
+            const Size(kPoolShapeSize, kPoolShapeSize),
+            reason: 'De graphic van d$sides moet goed zichtbaar zijn.');
+      }
+    });
+
     testWidgets('per type is een eigen aantal te kiezen', (tester) async {
       await tester.pumpWidget(DiceApp(randomFactory: () => Random(1)));
       await tester.pumpAndSettle();
