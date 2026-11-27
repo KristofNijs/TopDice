@@ -41,9 +41,10 @@ void main() {
         (tester) async {
       await tester.pumpWidget(
           DiceApp(randomFactory: () => Random(1)));
-      await tester.tap(find.byIcon(Icons.add).first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('add-6')));
       await tester.pump();
-      await tester.tap(find.byIcon(Icons.add).first);
+      await tester.tap(find.byKey(const Key('add-6')));
       await tester.pump();
       await tester.tap(find.text("Let's roll"));
       await tester.pumpAndSettle();
@@ -129,7 +130,9 @@ void main() {
         (tester) async {
       await tester.pumpWidget(DiceApp(randomFactory: () => Random(1)));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('8'));
+      await tester.tap(find.byKey(const Key('remove-6')));
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('add-8')));
       await tester.pumpAndSettle();
       await tester.tap(find.text("Let's roll"));
       await tester.pumpAndSettle();

@@ -5,45 +5,110 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:topdice/main.dart';
 
 void main() {
-  group('MainMenuScreen', () {
-    testWidgets('starts with one six-sided die selected', (tester) async {
-      final dice = DiceApp(randomFactory: () => Random(1));
-      await tester.pumpWidget(dice);
+  group('MainMenuScreen (SCRUM-36)', () {
+    testWidgets('start standaard met 1 d6 in de pool', (tester) async {
+      await tester.pumpWidget(DiceApp(randomFactory: () => Random(1)));
+      await tester.pumpAndSettle();
       expect(find.text('TopDice'), findsOneWidget);
-      expect(find.text('Aantal dobbelstenen'), findsOneWidget);
-      expect(find.text('Ogen per dobbelsteen'), findsOneWidget);
-      final chip = tester.widget<ChoiceChip>(
-          find.ancestor(of: find.text('6'), matching: find.byType(ChoiceChip)));
-      expect(chip.selected, isTrue);
+      expect(find.text('Dobbelstenen'), findsOneWidget);
+      expect(tester.widget<Text>(find.byKey(const Key('pool-count-6'))).data,
+          '1');
+      expect(tester.widget<Text>(find.byKey(const Key('pool-count-4'))).data,
+          '0');
+      expect(tester.widget<Text>(find.byKey(const Key('pool-total'))).data,
+          '1 van 12 dobbelstenen');
     });
 
-    testWidgets('increases the number of dice when + is tapped', (tester) async {
+    testWidgets('per type is een eigen aantal te kiezen', (tester) async {
       await tester.pumpWidget(DiceApp(randomFactory: () => Random(1)));
-      await tester.tap(find.byIcon(Icons.add).first);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('add-4')));
       await tester.pump();
-      expect(find.text('2'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('add-4')));
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('add-6')));
+      await tester.pump();
+
+      expect(tester.widget<Text>(find.byKey(const Key('pool-count-4'))).data,
+          '2');
+      expect(tester.widget<Text>(find.byKey(const Key('pool-count-6'))).data,
+          '2');
+
+      await tester.tap(find.byKey(const Key('remove-4')));
+      await tester.pump();
+      expect(tester.widget<Text>(find.byKey(const Key('pool-count-4'))).data,
+          '1');
     });
 
-    testWidgets('selecting a different number of eyes updates the choice',
+    testWidgets('"Let\'s roll" is uitgeschakeld bij een lege pool',
         (tester) async {
       await tester.pumpWidget(DiceApp(randomFactory: () => Random(1)));
-      await tester.tap(find.text('20'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('remove-6')));
       await tester.pump();
-      final chip = tester.widget<ChoiceChip>(
-          find.ancestor(of: find.text('20'), matching: find.byType(ChoiceChip)));
-      expect(chip.selected, isTrue);
+
+      expect(
+          tester.widget<FilledButton>(find.byKey(const Key('lets-roll')))
+              .onPressed,
+          isNull,
+          reason: 'Zonder dobbelstenen kan er niet gegooid worden.');
     });
 
-    testWidgets('"Let\'s roll" navigates to the result screen showing the rolled dice',
+    testWidgets('de pool is begrensd op 12 dobbelstenen', (tester) async {
+      await tester.pumpWidget(DiceApp(randomFactory: () => Random(1)));
+      await tester.pumpAndSettle();
+
+      for (var i = 0; i < 11; i++) {
+        await tester.tap(find.byKey(const Key('add-6')));
+        await tester.pump();
+      }
+      expect(tester.widget<Text>(find.byKey(const Key('pool-total'))).data,
+          '12 van 12 dobbelstenen');
+      expect(tester.widget<IconButton>(find.byKey(const Key('add-6'))).onPressed,
+          isNull,
+          reason: 'Bij de begrenzing doet + niets meer.');
+    });
+
+    testWidgets('een gemengde worp toont elke steen met zijn eigen type',
         (tester) async {
       await tester.pumpWidget(DiceApp(randomFactory: () => Random(1)));
-      await tester.tap(find.byIcon(Icons.add).first);
+      await tester.pumpAndSettle();
+
+      // Pool: 2 d4 + 1 d6.
+      await tester.tap(find.byKey(const Key('add-4')));
       await tester.pump();
-      await tester.tap(find.byIcon(Icons.add).first);
+      await tester.tap(find.byKey(const Key('add-4')));
       await tester.pump();
       await tester.tap(find.text("Let's roll"));
       await tester.pumpAndSettle();
+
       expect(find.byType(ResultScreen), findsOneWidget);
+      expect(find.text('2d4 + 1d6'), findsOneWidget);
+      expect(find.byType(DieFace), findsNWidgets(3));
+      expect(
+          find.byWidgetPredicate(
+              (w) => w is DieFace && w.sides == 4),
+          findsNWidgets(2));
+      expect(
+          find.byWidgetPredicate(
+              (w) => w is DieFace && w.sides == 6),
+          findsOneWidget);
+    });
+
+    testWidgets('drie d6 gooien geeft de bekende Random(1)-reeks',
+        (tester) async {
+      await tester.pumpWidget(DiceApp(randomFactory: () => Random(1)));
+      await tester.pumpAndSettle();
+
+      for (var i = 0; i < 2; i++) {
+        await tester.tap(find.byKey(const Key('add-6')));
+        await tester.pump();
+      }
+      await tester.tap(find.text("Let's roll"));
+      await tester.pumpAndSettle();
+
       // Random(1) levert met d6 de reeks 1, 4, 6: ogen i.p.v. nummers.
       expect(find.byType(DieFace), findsNWidgets(3));
       expect(find.byKey(const Key('pip')), findsNWidgets(1 + 4 + 6));
@@ -51,9 +116,10 @@ void main() {
     });
   });
 
-  group('ResultScreen', () {
+  group('ResultScreen (SCRUM-36)', () {
     testWidgets('rolls again without leaving the screen', (tester) async {
       await tester.pumpWidget(DiceApp(randomFactory: () => Random(1)));
+      await tester.pumpAndSettle();
       await tester.tap(find.text("Let's roll"));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Opnieuw gooien'));
@@ -65,23 +131,12 @@ void main() {
 
     testWidgets('returns to the menu with the back button', (tester) async {
       await tester.pumpWidget(DiceApp(randomFactory: () => Random(1)));
+      await tester.pumpAndSettle();
       await tester.tap(find.text("Let's roll"));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Andere dobbelstenen'));
       await tester.pumpAndSettle();
       expect(find.byType(MainMenuScreen), findsOneWidget);
-    });
-
-    testWidgets('shows the number of dice that was configured', (tester) async {
-      await tester.pumpWidget(DiceApp(randomFactory: () => Random(2)));
-      await tester.tap(find.byIcon(Icons.add).first);
-      await tester.pump();
-      await tester.tap(find.byIcon(Icons.add).first);
-      await tester.pump();
-      await tester.tap(find.text("Let's roll"));
-      await tester.pumpAndSettle();
-      // Three dice configured: three die faces plus one total line.
-      expect(find.byType(DieFace), findsNWidgets(3));
     });
   });
 }
