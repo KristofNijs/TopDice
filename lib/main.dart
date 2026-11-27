@@ -266,7 +266,7 @@ class _ResultScreenState extends State<ResultScreen> {
 
 
 /// Enkele dobbelsteen-face in de vorm van het echte D&D-type (SCRUM-28):
-/// tetraëder voor d4, kubus voor d6, ruit voor d8, vlieger voor d10,
+/// tetraëder voor d4, plat vierkant voor d6, ruit voor d8, vlieger voor d10,
 /// vijfhoek voor d12 en zeshoek voor d20. De waarde staat als klassiek
 /// ogenpatroon (1 t/m 8) of als nummer (9 en hoger) op de vorm.
 class DieFace extends StatelessWidget {
@@ -282,8 +282,8 @@ class DieFace extends StatelessWidget {
   final int sides;
 
   /// Grootte van het waardevlak binnen de vorm: in scherpe hoeken als
-  /// de d4 moet de waarde kleiner en lager staan; bij de d6 staan de
-  /// ogen op het frontvlak van de kubus (SCRUM-30).
+  /// de d4 moet de waarde kleiner en lager staan; de d6 vult zijn
+  /// platte vierkant met ogen (SCRUM-35).
   double get _valueSize => switch (sides) {
         4 => size * 0.42,
         6 => size * 0.66,
@@ -294,8 +294,6 @@ class DieFace extends StatelessWidget {
 
   Alignment get _valueAlignment => switch (sides) {
         4 => const Alignment(0, 0.18),
-        // Middelpunt van het frontvlak van de kubus.
-        6 => const Alignment(-0.16, 0.16),
         _ => Alignment.center,
       };
 

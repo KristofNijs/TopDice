@@ -99,33 +99,8 @@ void main() {
     });
   });
 
-  group('d6 als kubus (SCRUM-30)', () {
-    test('de kubus bestaat uit drie zichtbare vlakken', () {
-      final faces = cubeFaces();
-
-      expect(faces.front.length, 4, reason: 'Frontvlak is een vierhoek.');
-      expect(faces.top.length, 4, reason: 'Bovenvlak is een vierhoek.');
-      expect(faces.side.length, 4, reason: 'Zijvlak is een vierhoek.');
-    });
-
-    test('het frontvlak is een vierkant', () {
-      final front = cubeFaces().front;
-
-      final width = front[1].dx - front[0].dx;
-      final height = front[3].dy - front[0].dy;
-      expect(width, closeTo(height, 0.001),
-          reason: 'Een kubus heeft een vierkant frontvlak.');
-    });
-
-    test('de vlakken sluiten op elkaar aan zoals een kubus', () {
-      final faces = cubeFaces();
-
-      // Boven- en zijvlak delen elk twee hoekpunten met het frontvlak.
-      expect(faces.front.toSet().intersection(faces.top.toSet()).length, 2);
-      expect(faces.front.toSet().intersection(faces.side.toSet()).length, 2);
-    });
-
-    testWidgets('de d6-ogen staan leesbaar binnen het frontvlak',
+  group('d6 als plat vierkant (SCRUM-35)', () {
+    testWidgets('de d6 toont zijn ogen gecentreerd op het vierkant',
         (tester) async {
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
@@ -141,21 +116,15 @@ void main() {
 
       expect(find.byKey(const Key('pip')), findsNWidgets(5));
 
-      // Het ogenpatroon moet volledig binnen het frontvlak vallen.
-      final faces = cubeFaces();
-      final faceTopLeft = tester.getTopLeft(find.byType(DieFace));
-      final front = Rect.fromLTRB(
-        faceTopLeft.dx + faces.front.map((p) => p.dx).reduce(math.min) * 64,
-        faceTopLeft.dy + faces.front.map((p) => p.dy).reduce(math.min) * 64,
-        faceTopLeft.dx + faces.front.map((p) => p.dx).reduce(math.max) * 64,
-        faceTopLeft.dy + faces.front.map((p) => p.dy).reduce(math.max) * 64,
-      );
-      final pipCenter = tester.getCenter(find.byKey(const Key('pip')).last);
-      expect(front.contains(pipCenter), isTrue,
-          reason: 'De ogen horen op het frontvlak van de kubus.');
+      // De middelste oog hoort exact in het midden van het platte
+      // vierkant te staan.
+      final dieCenter = tester.getCenter(find.byType(DieFace));
+      final middlePip = tester.getCenter(find.byKey(const Key('pip')).at(2));
+      expect(middlePip, dieCenter,
+          reason: 'De ogen staan gecentreerd op de platte d6.');
     });
 
-    testWidgets('de kubus behoudt zijn afmetingen op verschillende groottes',
+    testWidgets('de d6 behoudt zijn afmetingen op verschillende groottes',
         (tester) async {
       for (final size in [22.0, 64.0, 120.0]) {
         await tester.pumpWidget(MaterialApp(

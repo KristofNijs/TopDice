@@ -31,7 +31,7 @@ lib/
   dice/
     dice_engine.dart   # worpen-logica (injecteerbare toevalsbron)
     dice_pips.dart     # klassieke ogenpatronen voor de d6
-    dice_shape.dart    # vormgetrouwe 2D-graphic per dobbelsteentype (d6 als kubus)
+    dice_shape.dart    # vormgetrouwe 2D-graphic per dobbelsteentype (d6 als plat vierkant)
 test/                  # widget- en unit-tests (flutter_test)
 ```
 
