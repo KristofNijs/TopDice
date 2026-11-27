@@ -19,6 +19,10 @@ const kSupportedSides = [4, 6, 8, 10, 12, 20];
 /// Maximum aantal dobbelstenen in een samengestelde worp.
 const int kMaxDice = 12;
 
+/// Zijde van de dobbelsteen-graphic in het startscherm, in logical
+/// pixels (SCRUM-37).
+const double kPoolShapeSize = 48.0;
+
 /// Sleutel waaronder de samengestelde dobbelsteenpool bewaard wordt
 /// tussen sessies, als JSON-map "soort: aantal".
 const String kDicePoolPrefKey = 'dice.pool';
@@ -208,7 +212,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               child: Row(
                 children: [
                   DiceShape(
-                      key: Key('pool-shape-$sides'), sides: sides, size: 28),
+                      key: Key('pool-shape-$sides'),
+                      sides: sides,
+                      size: kPoolShapeSize),
                   const SizedBox(width: 8),
                   Text('d$sides', style: theme.textTheme.titleMedium),
                   const Spacer(),
